@@ -3,25 +3,77 @@
    )
 }}
 
-with exclusions as (
+with advanced_illness as (
 
-select *
-from {{ref('quality_measures__int_nqf0059_exclude_advanced_illness')}}
+  {{ shared_exclusions__exclude_advanced_illness(
+      builtins.ref('quality_measures__int_nqf0059_denominator')
+      , concept_names = 
+        "(
+            'advanced illness'
+          , 'acute inpatient'
+          , 'encounter inpatient'
+          , 'outpatient'
+          , 'observation'
+          , 'emergency department visit'
+          , 'nonacute inpatient'
+        )"
+  )}}
 
-union all
+)
 
-select *
-from {{ref('quality_measures__int_nqf0059_exclude_dementia')}}
+, dementia as (
 
-union all
+  {{ shared_exclusions__exclude_dementia(
+      builtins.ref('quality_measures__int_nqf0059_denominator')
+      , concept_names = 
+        "(
+          'dementia medications'
+        )"
+  )}}
 
-select *
-from {{ref('quality_measures__int_nqf0059_exclude_hospice_palliative')}}
+)
 
-union all
+, hospice_palliative as (
 
-select *
-from {{ref('quality_measures__int_nqf0059_exclude_institutional_snp')}}
+  {{ shared_exclusions__hospice_palliative(
+      builtins.ref('quality_measures__int_nqf0059_denominator')
+      , concept_names = 
+        "(
+          'hospice encounter'
+        , 'palliative care encounter'
+        , 'hospice care ambulatory'
+        , 'hospice diagnosis'
+        , 'palliative care diagnosis'
+        )"
+  )}}
+)
+
+, instutional_snp as (
+
+  {{ shared_exclusions__institutional_snp(
+      builtins.ref('quality_measures__int_nqf0059_denominator')
+      , place_of_service_codes = "('32', '33', '34', '54', '56')"
+  )}}
+)
+
+, exclusions as (
+
+  select *
+  from advanced_illness
+
+  union all
+
+  select *
+  from dementia
+
+  union all
+
+  select * from hospice_palliative
+
+  union all
+
+  select *
+  from instutional_snp
 
 )
 
