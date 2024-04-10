@@ -202,7 +202,7 @@ with visit_codes as (
             )
             }}
             and
-                pp.lookback_period
+                pp.lookback_period_june
         and lower(patients_with_age.sex) = 'female'
 
 )
@@ -232,11 +232,16 @@ with visit_codes as (
         on qualifying_patients_w_fractures.patient_id = visits_encounters.patient_id
     where 
         lower(visits_encounters.encounter_type) in (
-             'home health'
+              'acute inpatient'
+            , 'annual wellness visit'
+            , 'emergency department visit'
+            , 'emergency department'
+            , 'home healthcare services'
             , 'office visit'
+            , 'preventive care services established office visit, 18 and up'
+            , 'preventive care services initial office visit, 18 and up'
+            , 'emergency department evaluation and management visit'
             , 'outpatient'
-            , 'outpatient rehabilitation'
-            , 'acute inpatient'
         )
 
 )
@@ -261,7 +266,7 @@ with visit_codes as (
         on qualifying_patients_w_encounter.patient_id = qualifying_patients_w_procedure.patient_id
     inner join claims_encounters
         on qualifying_patients_w_encounter.patient_id = claims_encounters.patient_id
-    where claims_encounters.place_of_service_code not in ('21')
+    where cast(claims_encounters.place_of_service_code as {{ dbt.type_string() }}) not in ('21')
 
     union all
 
@@ -279,6 +284,7 @@ with visit_codes as (
 
     select
           cast(patient_id as {{ dbt.type_string() }}) as patient_id
+        , cast(recorded_date as date) as recorded_date
         , cast(age as integer) as age
         , cast(performance_period_begin as date) as performance_period_begin
         , cast(performance_period_end as date) as performance_period_end
@@ -292,6 +298,7 @@ with visit_codes as (
 
 select 
       patient_id
+    , recorded_date  
     , age
     , performance_period_begin
     , performance_period_end
